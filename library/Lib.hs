@@ -15,6 +15,9 @@ module Lib
   ) where
 
 --------------------------------------------------------------------------------
+import Data.Char
+
+--------------------------------------------------------------------------------
 import ClassyPrelude hiding (replicateM)
 import Control.Lens
 import Control.Monad.State.Strict
@@ -26,8 +29,9 @@ import Types
 --------------------------------------------------------------------------------
 initGameState :: GameState
 initGameState =
-  GameState { _posX = 0
-            , _posY = 0 
+  GameState { _posX  = 0
+            , _posY  = 0 
+            , _board = Board mempty
             }
 
 --------------------------------------------------------------------------------
@@ -37,14 +41,15 @@ runGame action = evalStateT action initGameState
 --------------------------------------------------------------------------------
 gameLoop :: Game ()
 gameLoop = do
+  insertToken 0 Circle
+  insertToken 0 Circle
+  insertToken 0 Circle
   drawBoard
 
 --------------------------------------------------------------------------------
 drawBoard :: Game ()
 drawBoard = do
   clearScreen
-
-  let boardWidth = horizontalSlotNum * slotWidth
 
   for_ [1..verticalSlotNum] $ \line -> do
     setCursorColumn margin
@@ -70,6 +75,33 @@ drawBoard = do
     printChar '='
   printChar '|'
 
+  drawTokens
+  cursorDown 100
+
+--------------------------------------------------------------------------------
+drawTokens :: Game ()
+drawTokens = do
+  setCursorPosition margin 0
+  for_ [0..(horizontalSlotNum - 1)] $ \colIdx -> do
+    outcome <- use (board.piles.at colIdx)
+    for_ outcome $ \pile -> do
+      for_ (zip [1..verticalSlotNum] (toList pile)) $ \(line, token) -> do
+        let normalizedLine = verticalSlotNum - line + 1
+            colPos  = margin + (colIdx * slotWidth) + 1
+            linePos = (normalizedLine - 2) * slotHeight + 1
+        setCursorPosition colPos linePos
+        drawToken token
+
+--------------------------------------------------------------------------------
+drawToken :: Token -> Game ()
+drawToken _ = do
+  x <- use posX
+  replicateM_ (slotHeight - 3) $ do
+    replicateM_ (slotWidth - 1) $
+      printChar block
+    cursorDown 1
+    setCursorColumn x
+
 --------------------------------------------------------------------------------
 -- // Game constants
 --------------------------------------------------------------------------------
@@ -82,16 +114,22 @@ verticalSlotNum = 6
 
 --------------------------------------------------------------------------------
 slotWidth :: Int
-slotWidth = 5
+slotWidth = 10
 
 --------------------------------------------------------------------------------
 slotHeight :: Int
-slotHeight = 5 
+slotHeight = 10 
+
+--------------------------------------------------------------------------------
+boardWidth :: Int
+boardWidth = horizontalSlotNum * slotWidth
 
 --------------------------------------------------------------------------------
 margin :: Int
 margin = 2
 
 --------------------------------------------------------------------------------
--- \\
+-- // Drawing
 --------------------------------------------------------------------------------
+block :: Char
+block = chr 9608

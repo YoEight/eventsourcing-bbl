@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE StrictData      #-}
 {-# LANGUAGE TemplateHaskell #-}
 --------------------------------------------------------------------------------
@@ -15,13 +16,28 @@ module Types where
 
 --------------------------------------------------------------------------------
 import ClassyPrelude
-import Control.Lens
+import Control.Lens hiding (cons)
 import Control.Monad.State.Strict
+import Data.List.NonEmpty (NonEmpty)
+
+--------------------------------------------------------------------------------
+type ColumnIndex = Int
+
+--------------------------------------------------------------------------------
+data Token = Circle | Cross deriving Show
+
+--------------------------------------------------------------------------------
+data Board =
+  Board { _piles :: HashMap ColumnIndex (NonEmpty Token) }
+
+--------------------------------------------------------------------------------
+makeLenses ''Board
 
 --------------------------------------------------------------------------------
 data GameState =
-  GameState { _posX :: Int
-            , _posY :: Int
+  GameState { _posX  :: Int
+            , _posY  :: Int
+            , _board :: Board
             }
 
 --------------------------------------------------------------------------------
@@ -29,3 +45,11 @@ makeLenses ''GameState
 
 --------------------------------------------------------------------------------
 type Game = StateT GameState IO
+
+--------------------------------------------------------------------------------
+insertToken :: ColumnIndex -> Token -> Game ()
+insertToken idx tok = board.piles %= alterMap go idx
+  where
+    go :: Maybe (NonEmpty Token) -> Maybe (NonEmpty Token)
+    go Nothing     = Just [tok]
+    go (Just pile) = Just (cons tok pile)
