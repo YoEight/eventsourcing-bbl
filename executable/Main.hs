@@ -14,4 +14,5 @@ import Lib
 
 --------------------------------------------------------------------------------
 main :: IO ()
-main = putStrLn "Toto"
+main = runGame gameLoop
+

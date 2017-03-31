@@ -16,7 +16,7 @@ benchmarks:
 category: Other
 description: eventsourcing-venteprivee-bbl is a new Haskeleton package.
 executables:
-  eventsourcing-venteprivee-bbl:
+  bbl-game:
     dependencies:
     - base
     - eventsourcing-venteprivee-bbl
@@ -38,6 +38,8 @@ library:
   dependencies:
   - base
   - ansi-terminal
+  - lens
+  - mtl
   source-dirs: library
 license: MIT
 maintainer: Yorick Laupa
