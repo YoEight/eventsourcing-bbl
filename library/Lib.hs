@@ -16,14 +16,15 @@ module Lib
 
 --------------------------------------------------------------------------------
 import Data.Char
+import Data.List (replicate)
 
 --------------------------------------------------------------------------------
-import ClassyPrelude hiding (replicateM)
+import ClassyPrelude hiding (replicate)
 import Control.Lens
 import Control.Monad.State.Strict
+import Graphics.Vty
 
 --------------------------------------------------------------------------------
-import Lifted
 import Types
 
 --------------------------------------------------------------------------------
@@ -39,68 +40,70 @@ runGame :: Game () -> IO ()
 runGame action = evalStateT action initGameState
 
 --------------------------------------------------------------------------------
-gameLoop :: Game ()
+gameLoop :: IO ()
 gameLoop = do
-  insertToken 0 Circle
-  insertToken 0 Circle
-  insertToken 0 Circle
-  drawBoard
+  cfg <- standardIOConfig
+  vty <- mkVty cfg
+
+  vtyBoard vty
+  e <- nextEvent vty
+  shutdown vty
+  print e
 
 --------------------------------------------------------------------------------
-drawBoard :: Game ()
-drawBoard = do
-  clearScreen
-
-  for_ [1..verticalSlotNum] $ \line -> do
-    setCursorColumn margin
-
-    printChar '|'
-    replicateM_ (boardWidth - 1) $ do
-      let char = if line == 1 then '=' else '-'
-      printChar char
-    printChar '|'
-
-    replicateM_ (slotHeight - 2) $ do
-       cursorDown 1
-       setCursorColumn margin
-       printChar '|'
-
-       cursorBackward 1
-       for_ [1..(verticalSlotNum + 1)] $ \col -> do
-          setCursorColumn (margin + (col * slotWidth))
-          printChar '|'
-
-  setCursorColumn margin
-  replicateM_ boardWidth $
-    printChar '='
-  printChar '|'
-
-  drawTokens
-  cursorDown 100
+generate :: (Int -> Maybe Char) -> String
+generate k = go 1
+  where
+    go i =
+      case k i of
+        Just c  -> c : go (i + 1)
+        Nothing -> []
 
 --------------------------------------------------------------------------------
-drawTokens :: Game ()
-drawTokens = do
-  setCursorPosition margin 0
-  for_ [0..(horizontalSlotNum - 1)] $ \colIdx -> do
-    outcome <- use (board.piles.at colIdx)
-    for_ outcome $ \pile -> do
-      for_ (zip [1..verticalSlotNum] (toList pile)) $ \(line, token) -> do
-        let normalizedLine = verticalSlotNum - line + 1
-            colPos  = margin + (colIdx * slotWidth) + 1
-            linePos = (normalizedLine - 2) * slotHeight + 1
-        setCursorPosition colPos linePos
-        drawToken token
+vtyBoard :: Vty -> IO ()
+vtyBoard vty = do
+  let baseX     = 10
+      baseY     = 2
+      landscape = [ translate (baseX + 1) (baseY + (slotHeight * 5)) slot
+                  , translate baseX baseY boardImage
+                  ]
+
+  update vty (picForLayers landscape)
 
 --------------------------------------------------------------------------------
-drawToken :: Token -> Game ()
-drawToken _ = do
-  x <- use posX
-  replicateM_ (slotHeight - 3) $ do
-    replicateM_ (slotWidth - 1) $
-      printChar block
-    cursorDown 1
-    setCursorColumn x
+boardImage :: Image
+boardImage = foldMap go [1..boardHeight]
+  where
+    go 1 = boardVerticalBorder
+    go line
+      | line /= boardHeight && line `mod` slotHeight == 0 = plainLine
+      | line == boardHeight = boardVerticalBorder
+      | otherwise = boardLine
+
+--------------------------------------------------------------------------------
+boardVerticalBorder :: Image
+boardVerticalBorder = string defAttr (replicate boardWidth '=')
+
+--------------------------------------------------------------------------------
+plainLine :: Image
+plainLine = string defAttr (replicate boardWidth '-')
+
+--------------------------------------------------------------------------------
+boardLine :: Image
+boardLine = string defAttr line
+  where
+    line = generate $ \col ->
+      case col of
+        1 -> Just '|'
+        _ | col `mod` slotWidth == 0 -> Just '|'
+          | col > boardWidth         -> Nothing
+          | otherwise                -> Just ' '
+
+--------------------------------------------------------------------------------
+slot :: Image
+slot = foldMap (\_ -> blockLine) [1..(slotHeight - 1)]
+  where
+    blockLine = string defAttr (replicate (slotWidth - 2) block)
 
 --------------------------------------------------------------------------------
 -- // Game constants
@@ -123,6 +126,10 @@ slotHeight = 10 
 --------------------------------------------------------------------------------
 boardWidth :: Int
 boardWidth = horizontalSlotNum * slotWidth
+
+--------------------------------------------------------------------------------
+boardHeight :: Int
+boardHeight = verticalSlotNum * slotHeight
 
 --------------------------------------------------------------------------------
 margin :: Int

@@ -14,5 +14,5 @@ import Lib
 
 --------------------------------------------------------------------------------
 main :: IO ()
-main = runGame gameLoop
+main = gameLoop
 

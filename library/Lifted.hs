@@ -24,7 +24,7 @@ import Types
 --------------------------------------------------------------------------------
 clearScreen :: Game ()
 clearScreen = do
-  liftIO ANSI.clearScreen
+  -- liftIO ANSI.clearScreen
   setCursorPosition 0 0
 
 --------------------------------------------------------------------------------
