@@ -15,19 +15,24 @@ module Lib
   ) where
 
 --------------------------------------------------------------------------------
-import ClassyPrelude hiding (replicateM)
-import Control.Lens
-import Control.Monad.State.Strict
+import Data.Char
+import Data.List (replicate)
 
 --------------------------------------------------------------------------------
-import Lifted
+import ClassyPrelude hiding (replicate)
+import Control.Lens
+import Control.Monad.State.Strict
+import Graphics.Vty
+
+--------------------------------------------------------------------------------
 import Types
 
 --------------------------------------------------------------------------------
 initGameState :: GameState
 initGameState =
-  GameState { _posX = 0
-            , _posY = 0 
+  GameState { _posX  = 0
+            , _posY  = 0 
+            , _board = Board mempty
             }
 
 --------------------------------------------------------------------------------
@@ -35,40 +40,70 @@ runGame :: Game () -> IO ()
 runGame action = evalStateT action initGameState
 
 --------------------------------------------------------------------------------
-gameLoop :: Game ()
+gameLoop :: IO ()
 gameLoop = do
-  drawBoard
+  cfg <- standardIOConfig
+  vty <- mkVty cfg
+
+  vtyBoard vty
+  e <- nextEvent vty
+  shutdown vty
+  print e
 
 --------------------------------------------------------------------------------
-drawBoard :: Game ()
-drawBoard = do
-  clearScreen
+generate :: (Int -> Maybe Char) -> String
+generate k = go 1
+  where
+    go i =
+      case k i of
+        Just c  -> c : go (i + 1)
+        Nothing -> []
 
-  let boardWidth = horizontalSlotNum * slotWidth
+--------------------------------------------------------------------------------
+vtyBoard :: Vty -> IO ()
+vtyBoard vty = do
+  let baseX     = 10
+      baseY     = 2
+      landscape = [ translate (baseX + 1) (baseY + (slotHeight * 5)) slot
+                  , translate baseX baseY boardImage
+                  ]
 
-  for_ [1..verticalSlotNum] $ \line -> do
-    setCursorColumn margin
+  update vty (picForLayers landscape)
 
-    printChar '|'
-    replicateM_ (boardWidth - 1) $ do
-      let char = if line == 1 then '=' else '-'
-      printChar char
-    printChar '|'
+--------------------------------------------------------------------------------
+boardImage :: Image
+boardImage = foldMap go [1..boardHeight]
+  where
+    go 1 = boardVerticalBorder
+    go line
+      | line /= boardHeight && line `mod` slotHeight == 0 = plainLine
+      | line == boardHeight = boardVerticalBorder
+      | otherwise = boardLine
 
-    replicateM_ (slotHeight - 2) $ do
-       cursorDown 1
-       setCursorColumn margin
-       printChar '|'
+--------------------------------------------------------------------------------
+boardVerticalBorder :: Image
+boardVerticalBorder = string defAttr (replicate boardWidth '=')
 
-       cursorBackward 1
-       for_ [1..(verticalSlotNum + 1)] $ \col -> do
-          setCursorColumn (margin + (col * slotWidth))
-          printChar '|'
+--------------------------------------------------------------------------------
+plainLine :: Image
+plainLine = string defAttr (replicate boardWidth '-')
 
-  setCursorColumn margin
-  replicateM_ boardWidth $
-    printChar '='
-  printChar '|'
+--------------------------------------------------------------------------------
+boardLine :: Image
+boardLine = string defAttr line
+  where
+    line = generate $ \col ->
+      case col of
+        1 -> Just '|'
+        _ | col `mod` slotWidth == 0 -> Just '|'
+          | col > boardWidth         -> Nothing
+          | otherwise                -> Just ' '
+
+--------------------------------------------------------------------------------
+slot :: Image
+slot = foldMap (\_ -> blockLine) [1..(slotHeight - 1)]
+  where
+    blockLine = string defAttr (replicate (slotWidth - 2) block)
 
 --------------------------------------------------------------------------------
 -- // Game constants
@@ -82,16 +117,26 @@ verticalSlotNum = 6
 
 --------------------------------------------------------------------------------
 slotWidth :: Int
-slotWidth = 5
+slotWidth = 10
 
 --------------------------------------------------------------------------------
 slotHeight :: Int
-slotHeight = 5 
+slotHeight = 10 
+
+--------------------------------------------------------------------------------
+boardWidth :: Int
+boardWidth = horizontalSlotNum * slotWidth
+
+--------------------------------------------------------------------------------
+boardHeight :: Int
+boardHeight = verticalSlotNum * slotHeight
 
 --------------------------------------------------------------------------------
 margin :: Int
 margin = 2
 
 --------------------------------------------------------------------------------
--- \\
+-- // Drawing
 --------------------------------------------------------------------------------
+block :: Char
+block = chr 9608

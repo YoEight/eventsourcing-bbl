@@ -40,6 +40,7 @@ library:
   - ansi-terminal
   - lens
   - mtl
+  - vty
   source-dirs: library
 license: MIT
 maintainer: Yorick Laupa
