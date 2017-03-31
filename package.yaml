@@ -37,11 +37,18 @@ github: YoEight/eventsourcing-venteprivee-bbl
 library:
   dependencies:
   - base
+  - ansi-terminal
   source-dirs: library
 license: MIT
 maintainer: Yorick Laupa
 name: eventsourcing-venteprivee-bbl
 synopsis: A new Haskeleton package.
+default-extensions:
+  - OverloadedStrings
+  - RecordWildCards
+  - NoImplicitPrelude
+dependencies:
+  - classy-prelude
 tests:
   eventsourcing-venteprivee-bbl-test-suite:
     dependencies:

@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 -- |
--- Module : Main
+-- Module : Lib
 -- Copyright : (C) 2017 Yorick Laupa
 -- License : (see the file LICENSE)
 --
@@ -9,9 +9,9 @@
 -- Portability : non-portable
 --
 --------------------------------------------------------------------------------
-import ClassyPrelude
-import Lib
+module Lib where
 
 --------------------------------------------------------------------------------
-main :: IO ()
-main = putStrLn "Toto"
+import ClassyPrelude
+
+--------------------------------------------------------------------------------
