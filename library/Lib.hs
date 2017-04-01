@@ -62,10 +62,8 @@ generate k = go 1
 --------------------------------------------------------------------------------
 vtyBoard :: Vty -> IO ()
 vtyBoard vty = do
-  let baseX     = 10
-      baseY     = 2
-      landscape = [ translate (baseX + 1) (baseY + (slotHeight * 5)) slot
-                  , translate baseX baseY boardImage
+  let landscape = [ placeSlotAt 7 6
+                  , translate originX originY boardImage
                   ]
 
   update vty (picForLayers landscape)
@@ -81,21 +79,21 @@ placeSlotAt slotX slotY = do
 
 --------------------------------------------------------------------------------
 boardImage :: Image
-boardImage = foldMap go [1..boardHeight]
+boardImage = foldMap go [1..(boardHeight + 1)]
   where
-    go 1 = boardVerticalBorder
+    go 1 = plainLine
     go line
-      | line /= boardHeight && line `mod` slotHeight == 0 = plainLine
-      | line == boardHeight = boardVerticalBorder
-      | otherwise = boardLine
+      | (line - 1) `mod` slotHeight == 0 = plainLine
+      | line > boardHeight               = mempty
+      | otherwise                        = boardLine
 
 --------------------------------------------------------------------------------
 boardVerticalBorder :: Image
-boardVerticalBorder = string defAttr (replicate boardWidth '=')
+boardVerticalBorder = string defAttr (replicate (boardWidth + 1) '=')
 
 --------------------------------------------------------------------------------
 plainLine :: Image
-plainLine = string defAttr (replicate boardWidth '-')
+plainLine = string defAttr (replicate (boardWidth + 1) '-')
 
 --------------------------------------------------------------------------------
 boardLine :: Image
@@ -104,15 +102,15 @@ boardLine = string defAttr line
     line = generate $ \col ->
       case col of
         1 -> Just '|'
-        _ | col `mod` slotWidth == 0 -> Just '|'
-          | col > boardWidth         -> Nothing
-          | otherwise                -> Just ' '
+        _ | (col - 1) `mod` slotWidth == 0 -> Just '|'
+          | col > boardWidth               -> Nothing
+          | otherwise                      -> Just ' '
 
 --------------------------------------------------------------------------------
 slot :: Image
 slot = foldMap (\_ -> blockLine) [1..(slotHeight - 1)]
   where
-    blockLine = string defAttr (replicate (slotWidth - 2) block)
+    blockLine = string defAttr (replicate (slotWidth - 1) block)
 
 --------------------------------------------------------------------------------
 -- // Game constants
@@ -143,6 +141,14 @@ boardHeight = verticalSlotNum * slotHeight
 --------------------------------------------------------------------------------
 margin :: Int
 margin = 2
+
+--------------------------------------------------------------------------------
+originX :: Int
+originX = 10
+
+--------------------------------------------------------------------------------
+originY :: Int
+originY = 2
 
 --------------------------------------------------------------------------------
 -- // Drawing
