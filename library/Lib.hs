@@ -71,6 +71,15 @@ vtyBoard vty = do
   update vty (picForLayers landscape)
 
 --------------------------------------------------------------------------------
+placeSlotAt :: Int -> Int -> Image
+placeSlotAt slotX slotY = do
+  translate posX posY slot
+  where
+    posX  = originX + (slotX - 1) * slotWidth + 1
+    posY  = originY + normY * slotHeight + 1
+    normY = verticalSlotNum - slotY
+
+--------------------------------------------------------------------------------
 boardImage :: Image
 boardImage = foldMap go [1..boardHeight]
   where
