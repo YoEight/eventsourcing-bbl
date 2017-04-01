@@ -14,10 +14,13 @@ module Lib
 
 --------------------------------------------------------------------------------
 import ClassyPrelude
+import Control.Monad.State.Strict
+import Control.Lens
 import Graphics.Vty
 
 --------------------------------------------------------------------------------
 import Draw
+import Game
 import Types
 
 --------------------------------------------------------------------------------
@@ -26,16 +29,27 @@ gameLoop = do
   cfg <- standardIOConfig
   vty <- mkVty cfg
 
-  vtyBoard vty
-  e <- nextEvent vty
+  _ <- execStateT (go vty Start) newGameState
   shutdown vty
-  print e
+  where
+    go vty evt = do
+      continue <- react evt
+      when continue $ do
+        pos <- use cursorPos
+        p   <- use player
 
---------------------------------------------------------------------------------
-vtyBoard :: Vty -> IO ()
-vtyBoard vty = do
-  let landscape = [ placeSlotAt 7 6 Circle
-                  , translate originX originY boardImage
-                  ]
+        let landscape = [ placePlayerCursorAt p pos
+                        , translate originX originY boardImage
+                        ]
 
-  update vty (picForLayers landscape)
+        nextEvent <- liftIO $ do
+          update vty (picForLayers landscape)
+          let innerLoop = do
+                tmp <- nextEvent vty
+                case tmp of
+                  EvKey key mods    -> return $ KeyPressed key mods
+                  _                 -> innerLoop
+
+          innerLoop
+
+        go vty nextEvent

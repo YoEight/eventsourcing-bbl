@@ -80,6 +80,23 @@ slot token = foldMap (\_ -> blockLine) [1..(slotHeight - 1)]
         Cross  -> yellow
 
 --------------------------------------------------------------------------------
+placePlayerCursorAt :: Player -> Int -> Image
+placePlayerCursorAt p pos =
+  translateX posX (playerCursor p)
+  where
+    posX  = originX + (pos - 1) * slotWidth + 1
+
+--------------------------------------------------------------------------------
+playerCursor :: Player -> Image
+playerCursor p = string attr (replicate (slotWidth -1) '=')
+  where
+    attr  = defAttr `withForeColor` color
+    color =
+      case p of
+        Player1 -> red
+        Player2 -> yellow
+
+--------------------------------------------------------------------------------
 -- // Game constants
 --------------------------------------------------------------------------------
 horizontalSlotNum :: Int

@@ -19,6 +19,7 @@ import ClassyPrelude
 import Control.Lens hiding (cons)
 import Control.Monad.State.Strict
 import Data.List.NonEmpty (NonEmpty)
+import Graphics.Vty
 
 --------------------------------------------------------------------------------
 type ColumnIndex = Int
@@ -27,8 +28,17 @@ type ColumnIndex = Int
 data Token = Circle | Cross deriving Show
 
 --------------------------------------------------------------------------------
+data GameEvent
+  = Start
+  | KeyPressed Key [Modifier]
+
+--------------------------------------------------------------------------------
+data Player = Player1 | Player2
+
+--------------------------------------------------------------------------------
 data Phase
-  = Gaming
+  = Init
+  | Gaming
 
 --------------------------------------------------------------------------------
 data Board =
@@ -39,12 +49,23 @@ makeLenses ''Board
 
 --------------------------------------------------------------------------------
 data GameState =
-  GameState { _board :: Board
-            , _phase :: Phase
+  GameState { _board     :: Board
+            , _phase     :: Phase
+            , _cursorPos :: Int
+            , _player    :: Player
             }
 
 --------------------------------------------------------------------------------
 makeLenses ''GameState
+
+--------------------------------------------------------------------------------
+newGameState :: GameState
+newGameState =
+  GameState { _board     = Board mempty
+            , _phase     = Init
+            , _cursorPos = 1
+            , _player    = Player1
+            }
 
 --------------------------------------------------------------------------------
 type Game = StateT GameState IO
