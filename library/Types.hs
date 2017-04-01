@@ -27,6 +27,10 @@ type ColumnIndex = Int
 data Token = Circle | Cross deriving Show
 
 --------------------------------------------------------------------------------
+data Phase
+  = Gaming
+
+--------------------------------------------------------------------------------
 data Board =
   Board { _piles :: HashMap ColumnIndex (NonEmpty Token) }
 
@@ -35,9 +39,8 @@ makeLenses ''Board
 
 --------------------------------------------------------------------------------
 data GameState =
-  GameState { _posX  :: Int
-            , _posY  :: Int
-            , _board :: Board
+  GameState { _board :: Board
+            , _phase :: Phase
             }
 
 --------------------------------------------------------------------------------
