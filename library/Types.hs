@@ -32,6 +32,7 @@ data Slot
   = SlotEmpty
   | SlotPlayer1
   | SlotPlayer2
+  deriving Eq
 
 --------------------------------------------------------------------------------
 data Token = Circle | Cross deriving Show
@@ -133,3 +134,46 @@ insertToken idx = do
           _ -> loop rest
 
   loop (columnIndexes idx)
+
+--------------------------------------------------------------------------------
+checkWin :: Game Bool
+checkWin = go boardPositions
+  where
+    go []               = return False
+    go ((x,y):rest) = do
+      b <- use board
+      p <- use player
+
+      let slot = playerSlot p
+
+          onRight =
+            x + 3 <= horizontalSlotNum      &&
+            boardGetSlot b (x+1, y) == slot &&
+            boardGetSlot b (x+2, y) == slot &&
+            boardGetSlot b (x+3, y) == slot
+
+          onTop =
+            boardGetSlot b (x, y+1) == slot &&
+            boardGetSlot b (x, y+2) == slot &&
+            boardGetSlot b (x, y+3) == slot
+
+          onUpRight =
+            x + 3 <= horizontalSlotNum        &&
+            boardGetSlot b (x+1, y+1) == slot &&
+            boardGetSlot b (x+2, y+2) == slot &&
+            boardGetSlot b (x+3, y+3) == slot
+
+          onUpLeft =
+            x - 3 >= 1                        &&
+            boardGetSlot b (x-1, y+1) == slot &&
+            boardGetSlot b (x-2, y+2) == slot &&
+            boardGetSlot b (x-3, y+3) == slot
+
+          won =
+            onRight
+            || (y + 3 <= verticalSlotNum && (onTop || onUpRight || onUpLeft))
+
+      if won
+      then return won
+      else go rest
+

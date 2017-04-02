@@ -61,6 +61,10 @@ handleGamingPressed key mods =
       when succeed $ do
         player %= nextPlayer
 
-      return True
+      if succeed
+        then do
+          won <- checkWin
+          return $ not won
+        else return True
 
     _ -> return True
