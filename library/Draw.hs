@@ -19,6 +19,7 @@ import ClassyPrelude
 import Graphics.Vty
 
 --------------------------------------------------------------------------------
+import Constants
 import Types
 
 --------------------------------------------------------------------------------
@@ -97,42 +98,13 @@ playerCursor p = string attr (replicate (slotWidth -1) '=')
         Player2 -> yellow
 
 --------------------------------------------------------------------------------
--- // Game constants
---------------------------------------------------------------------------------
-horizontalSlotNum :: Int
-horizontalSlotNum = 7
+drawTokens :: Board -> [Image]
+drawTokens = foldMap drawing . boardTokens
+  where
+    drawing (col, pile) = go col 1 (reverse $ toList pile)
 
---------------------------------------------------------------------------------
-verticalSlotNum :: Int
-verticalSlotNum = 6
-
---------------------------------------------------------------------------------
-slotWidth :: Int
-slotWidth = 10
-
---------------------------------------------------------------------------------
-slotHeight :: Int
-slotHeight = 10 
-
---------------------------------------------------------------------------------
-boardWidth :: Int
-boardWidth = horizontalSlotNum * slotWidth
-
---------------------------------------------------------------------------------
-boardHeight :: Int
-boardHeight = verticalSlotNum * slotHeight
-
---------------------------------------------------------------------------------
-margin :: Int
-margin = 2
-
---------------------------------------------------------------------------------
-originX :: Int
-originX = 10
-
---------------------------------------------------------------------------------
-originY :: Int
-originY = 2
+    go col i (t:ts) = placeSlotAt col i t : go col (i+1) ts
+    go _ _ []       = []
 
 --------------------------------------------------------------------------------
 -- // Drawing

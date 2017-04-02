@@ -22,6 +22,9 @@ import Data.List.NonEmpty (NonEmpty)
 import Graphics.Vty
 
 --------------------------------------------------------------------------------
+import Constants
+
+--------------------------------------------------------------------------------
 type ColumnIndex = Int
 
 --------------------------------------------------------------------------------
@@ -36,6 +39,16 @@ data GameEvent
 data Player = Player1 | Player2
 
 --------------------------------------------------------------------------------
+nextPlayer :: Player -> Player
+nextPlayer Player1 = Player2
+nextPlayer Player2 = Player1
+
+--------------------------------------------------------------------------------
+playerToken :: Player -> Token
+playerToken Player1 = Circle
+playerToken Player2 = Cross
+
+--------------------------------------------------------------------------------
 data Phase
   = Init
   | Gaming
@@ -43,6 +56,10 @@ data Phase
 --------------------------------------------------------------------------------
 data Board =
   Board { _piles :: HashMap ColumnIndex (NonEmpty Token) }
+
+--------------------------------------------------------------------------------
+boardTokens :: Board -> [(ColumnIndex, NonEmpty Token)]
+boardTokens = mapToList . _piles
 
 --------------------------------------------------------------------------------
 makeLenses ''Board
@@ -71,9 +88,15 @@ newGameState =
 type Game = StateT GameState IO
 
 --------------------------------------------------------------------------------
-insertToken :: ColumnIndex -> Token -> Game ()
-insertToken idx tok = board.piles %= alterMap go idx
-  where
-    go :: Maybe (NonEmpty Token) -> Maybe (NonEmpty Token)
-    go Nothing     = Just [tok]
-    go (Just pile) = Just (cons tok pile)
+insertToken :: ColumnIndex -> Token -> Game Bool
+insertToken idx tok = do
+  m <- use (board.piles)
+  case lookup idx m of
+    Just pile
+      | length pile == verticalSlotNum -> return False
+      | otherwise -> do
+        board.piles .= insertMap idx (cons tok pile) m
+        return True
+    Nothing -> do
+      board.piles .= insertMap idx [tok] m
+      return True

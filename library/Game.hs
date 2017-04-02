@@ -54,4 +54,14 @@ handleGamingPressed key mods =
         [MCtrl] -> return False
         _       -> return True
 
+    KEnter -> do
+      p       <- use player
+      pos     <- use cursorPos
+      succeed <- insertToken pos (playerToken p)
+
+      when succeed $ do
+        player %= nextPlayer
+
+      return True
+
     _ -> return True

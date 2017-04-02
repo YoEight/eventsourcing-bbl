@@ -50,6 +50,7 @@ default-extensions:
   - OverloadedStrings
   - RecordWildCards
   - NoImplicitPrelude
+  - TypeFamilies
 dependencies:
   - classy-prelude
 tests:

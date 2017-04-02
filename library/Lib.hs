@@ -15,10 +15,11 @@ module Lib
 --------------------------------------------------------------------------------
 import ClassyPrelude
 import Control.Monad.State.Strict
-import Control.Lens
+import Control.Lens hiding (snoc)
 import Graphics.Vty
 
 --------------------------------------------------------------------------------
+import Constants
 import Draw
 import Game
 import Types
@@ -37,10 +38,12 @@ gameLoop = do
       when continue $ do
         pos <- use cursorPos
         p   <- use player
+        b   <- use board
 
-        let landscape = [ placePlayerCursorAt p pos
-                        , translate originX originY boardImage
-                        ]
+        let landscape =
+              placePlayerCursorAt p pos
+                : snoc (drawTokens b)
+                       (translate originX originY boardImage)
 
         nextEvent <- liftIO $ do
           update vty (picForLayers landscape)
