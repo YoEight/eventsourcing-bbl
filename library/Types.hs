@@ -15,17 +15,23 @@
 module Types where
 
 --------------------------------------------------------------------------------
-import ClassyPrelude
-import Control.Lens hiding (cons)
-import Control.Monad.State.Strict
-import Data.List.NonEmpty (NonEmpty)
-import Graphics.Vty
+import           ClassyPrelude
+import           Control.Lens
+import           Control.Monad.State.Strict
+import qualified Data.Vector as Vector
+import           Graphics.Vty
 
 --------------------------------------------------------------------------------
 import Constants
 
 --------------------------------------------------------------------------------
 type ColumnIndex = Int
+
+--------------------------------------------------------------------------------
+data Slot
+  = SlotEmpty
+  | SlotPlayer1
+  | SlotPlayer2
 
 --------------------------------------------------------------------------------
 data Token = Circle | Cross deriving Show
@@ -44,9 +50,9 @@ nextPlayer Player1 = Player2
 nextPlayer Player2 = Player1
 
 --------------------------------------------------------------------------------
-playerToken :: Player -> Token
-playerToken Player1 = Circle
-playerToken Player2 = Cross
+playerSlot :: Player -> Slot
+playerSlot Player1 = SlotPlayer1
+playerSlot Player2 = SlotPlayer2
 
 --------------------------------------------------------------------------------
 data Phase
@@ -54,15 +60,10 @@ data Phase
   | Gaming
 
 --------------------------------------------------------------------------------
-data Board =
-  Board { _piles :: HashMap ColumnIndex (NonEmpty Token) }
+type Pos = (Int, Int)
 
 --------------------------------------------------------------------------------
-boardTokens :: Board -> [(ColumnIndex, NonEmpty Token)]
-boardTokens = mapToList . _piles
-
---------------------------------------------------------------------------------
-makeLenses ''Board
+type Board = Vector.Vector Slot
 
 --------------------------------------------------------------------------------
 data GameState =
@@ -76,9 +77,27 @@ data GameState =
 makeLenses ''GameState
 
 --------------------------------------------------------------------------------
+boardGetSlot :: Board -> Pos -> Slot
+boardGetSlot b pos = b Vector.! (fromCartesian pos - 1)
+
+--------------------------------------------------------------------------------
+fromCartesian :: Pos -> Int
+fromCartesian (x, y) = x + horizontalSlotNum * (y - 1)
+
+--------------------------------------------------------------------------------
+toCartesian :: Int -> (Int, Int)
+toCartesian total = go 1 total
+  where
+    go y agg =
+      let remain = agg - horizontalSlotNum in
+      if remain >= 1
+      then go (y + 1) remain
+      else (remain, y)
+
+--------------------------------------------------------------------------------
 newGameState :: GameState
 newGameState =
-  GameState { _board     = Board mempty
+  GameState { _board     = Vector.replicate slotNums SlotEmpty
             , _phase     = Init
             , _cursorPos = 1
             , _player    = Player1
@@ -88,15 +107,29 @@ newGameState =
 type Game = StateT GameState IO
 
 --------------------------------------------------------------------------------
-insertToken :: ColumnIndex -> Token -> Game Bool
-insertToken idx tok = do
-  m <- use (board.piles)
-  case lookup idx m of
-    Just pile
-      | length pile == verticalSlotNum -> return False
-      | otherwise -> do
-        board.piles .= insertMap idx (cons tok pile) m
-        return True
-    Nothing -> do
-      board.piles .= insertMap idx [tok] m
-      return True
+columnIndexes :: Int -> [Pos]
+columnIndexes x = [ (x,y) | y <- [1..verticalSlotNum]]
+
+--------------------------------------------------------------------------------
+boardPositions :: [Pos]
+boardPositions =
+  [ (x,y) | x <- [1..horizontalSlotNum]
+          , y <- [1..verticalSlotNum]
+          ]
+
+--------------------------------------------------------------------------------
+insertToken :: ColumnIndex -> Game Bool
+insertToken idx = do
+  v <- use board
+  p <- use player
+
+  let loop []         = return False
+      loop (pos:rest) =
+        let loc = fromCartesian pos - 1 in
+        case boardGetSlot v pos of
+          SlotEmpty -> do
+            board .= (v Vector.// [(loc, playerSlot p)])
+            return True
+          _ -> loop rest
+
+  loop (columnIndexes idx)

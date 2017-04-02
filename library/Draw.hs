@@ -32,9 +32,9 @@ generate k = go 1
         Nothing -> []
 
 --------------------------------------------------------------------------------
-placeSlotAt :: Int -> Int -> Token -> Image
-placeSlotAt slotX slotY token = do
-  translate posX posY (slot token)
+placeSlotAt :: Int -> Int -> Slot -> Image
+placeSlotAt slotX slotY s = do
+  translate posX posY (slot s)
   where
     posX  = originX + (slotX - 1) * slotWidth + 1
     posY  = originY + normY * slotHeight + 1
@@ -70,15 +70,17 @@ boardLine = string defAttr line
           | otherwise                      -> Just ' '
 
 --------------------------------------------------------------------------------
-slot :: Token -> Image
-slot token = foldMap (\_ -> blockLine) [1..(slotHeight - 1)]
+slot :: Slot -> Image
+slot SlotEmpty = mempty
+slot s = foldMap (\_ -> blockLine) [1..(slotHeight - 1)]
   where
     blockLine = string attr (replicate (slotWidth - 1) block)
     attr      = defAttr `withForeColor` color
     color     =
-      case token of
-        Circle -> red
-        Cross  -> yellow
+      case s of
+        SlotPlayer1 -> red
+        SlotPlayer2 -> yellow
+        _           -> error "impossible in slot."
 
 --------------------------------------------------------------------------------
 placePlayerCursorAt :: Player -> Int -> Image
@@ -98,13 +100,10 @@ playerCursor p = string attr (replicate (slotWidth -1) '=')
         Player2 -> yellow
 
 --------------------------------------------------------------------------------
-drawTokens :: Board -> [Image]
-drawTokens = foldMap drawing . boardTokens
+drawSlots :: Board -> [Image]
+drawSlots b = fmap drawing boardPositions
   where
-    drawing (col, pile) = go col 1 (reverse $ toList pile)
-
-    go col i (t:ts) = placeSlotAt col i t : go col (i+1) ts
-    go _ _ []       = []
+    drawing pos@(x,y) = placeSlotAt x y (boardGetSlot b pos)
 
 --------------------------------------------------------------------------------
 -- // Drawing

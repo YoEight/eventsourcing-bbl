@@ -41,6 +41,7 @@ library:
   - lens
   - mtl
   - vty
+  - vector
   source-dirs: library
 license: MIT
 maintainer: Yorick Laupa

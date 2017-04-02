@@ -42,7 +42,7 @@ gameLoop = do
 
         let landscape =
               placePlayerCursorAt p pos
-                : snoc (drawTokens b)
+                : snoc (drawSlots b)
                        (translate originX originY boardImage)
 
         nextEvent <- liftIO $ do
