@@ -57,10 +57,15 @@ handleGamingPressed key mods =
     KEnter -> do
       pos     <- use cursorPos
       succeed <- insertToken pos
+      p       <- use player
 
       when succeed $ do
         player %= nextPlayer
 
-      return True
+      if succeed
+        then do
+          outcome <- checkWin
+          return (outcome /= Just p)
+        else return True
 
     _ -> return True

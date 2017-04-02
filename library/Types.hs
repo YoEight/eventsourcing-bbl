@@ -32,6 +32,7 @@ data Slot
   = SlotEmpty
   | SlotPlayer1
   | SlotPlayer2
+  deriving Eq
 
 --------------------------------------------------------------------------------
 data Token = Circle | Cross deriving Show
@@ -42,7 +43,7 @@ data GameEvent
   | KeyPressed Key [Modifier]
 
 --------------------------------------------------------------------------------
-data Player = Player1 | Player2
+data Player = Player1 | Player2 deriving Eq
 
 --------------------------------------------------------------------------------
 nextPlayer :: Player -> Player
@@ -53,6 +54,12 @@ nextPlayer Player2 = Player1
 playerSlot :: Player -> Slot
 playerSlot Player1 = SlotPlayer1
 playerSlot Player2 = SlotPlayer2
+
+--------------------------------------------------------------------------------
+slotPlayer :: Slot -> Maybe Player
+slotPlayer SlotPlayer1 = Just Player1
+slotPlayer SlotPlayer2 = Just Player2
+slotPlayer _           = Nothing
 
 --------------------------------------------------------------------------------
 data Phase
@@ -133,3 +140,45 @@ insertToken idx = do
           _ -> loop rest
 
   loop (columnIndexes idx)
+
+--------------------------------------------------------------------------------
+checkWin :: Game (Maybe Player)
+checkWin = go boardPositions
+  where
+    go []               = return Nothing
+    go ((x,y):rest) = do
+      b <- use board
+
+      let slot = boardGetSlot b (x,y)
+
+          onRight =
+            x + 3 <= horizontalSlotNum      &&
+            boardGetSlot b (x+1, y) == slot &&
+            boardGetSlot b (x+2, y) == slot &&
+            boardGetSlot b (x+3, y) == slot
+
+          onTop =
+            boardGetSlot b (x, y+1) == slot &&
+            boardGetSlot b (x, y+2) == slot &&
+            boardGetSlot b (x, y+3) == slot
+
+          onUpRight =
+            x + 3 <= horizontalSlotNum        &&
+            boardGetSlot b (x+1, y+1) == slot &&
+            boardGetSlot b (x+2, y+2) == slot &&
+            boardGetSlot b (x+3, y+3) == slot
+
+          onUpLeft =
+            x - 3 >= 1                        &&
+            boardGetSlot b (x-1, y+1) == slot &&
+            boardGetSlot b (x-2, y+2) == slot &&
+            boardGetSlot b (x-3, y+3) == slot
+
+          won =
+            onRight
+            || (y + 3 <= verticalSlotNum && (onTop || onUpRight || onUpLeft))
+
+      if slot /= SlotEmpty && won
+      then return $ slotPlayer slot
+      else go rest
+
