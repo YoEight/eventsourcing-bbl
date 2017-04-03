@@ -46,6 +46,11 @@ data GameEvent
 data Player = Player1 | Player2 deriving Eq
 
 --------------------------------------------------------------------------------
+instance Show Player where
+  show Player1 = "Player 1"
+  show Player2 = "Player 2"
+
+--------------------------------------------------------------------------------
 nextPlayer :: Player -> Player
 nextPlayer Player1 = Player2
 nextPlayer Player2 = Player1
@@ -65,6 +70,7 @@ slotPlayer _           = Nothing
 data Phase
   = Init
   | Gaming
+  | GameComplete
 
 --------------------------------------------------------------------------------
 type Pos = (Int, Int)
@@ -78,6 +84,7 @@ data GameState =
             , _phase     :: Phase
             , _cursorPos :: Int
             , _player    :: Player
+            , _winner    :: Maybe Player
             }
 
 --------------------------------------------------------------------------------
@@ -108,6 +115,7 @@ newGameState =
             , _phase     = Init
             , _cursorPos = 1
             , _player    = Player1
+            , _winner    = Nothing
             }
 
 --------------------------------------------------------------------------------

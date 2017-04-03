@@ -30,8 +30,9 @@ react Start = do
 react (KeyPressed key mods) = do
   p <- use phase
   case p of
-    Gaming -> handleGamingPressed key mods
-    _      -> return True
+    Gaming       -> handleGamingPressed key mods
+    GameComplete -> handleComplete key mods
+    _            -> return True
 
 --------------------------------------------------------------------------------
 getImages :: Game [Image]
@@ -49,6 +50,14 @@ getImages = do
           landscape = playerCur : snoc (drawSlots b) playboard
 
       return landscape
+    GameComplete -> do
+      Just w <- use winner
+      return [ placeTextAt (1,1) (show w <> " won. Press [ENTER] to quit.") ]
+
+--------------------------------------------------------------------------------
+handleComplete :: Key -> [Modifier] -> Game Bool
+handleComplete KEnter _ = return False
+handleComplete _ _      = return True
 
 --------------------------------------------------------------------------------
 handleGamingPressed :: Key -> [Modifier] -> Game Bool
@@ -76,15 +85,14 @@ handleGamingPressed key mods =
     KEnter -> do
       pos     <- use cursorPos
       succeed <- insertToken pos
-      p       <- use player
 
       when succeed $ do
         player %= nextPlayer
 
-      if succeed
-        then do
-          outcome <- checkWin
-          return (outcome /= Just p)
-        else return True
+        outcome <- checkWin
+        for_ outcome $ \winPlayer -> do
+          winner ?= winPlayer
+          phase  .= GameComplete
 
+      return True
     _ -> return True

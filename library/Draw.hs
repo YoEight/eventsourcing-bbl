@@ -100,6 +100,11 @@ playerCursor p = string attr (replicate (slotWidth -1) '=')
         Player2 -> yellow
 
 --------------------------------------------------------------------------------
+placeTextAt :: Pos -> String -> Image
+placeTextAt (x,y) s =
+  translate (originX + x) (originY + y) (string defAttr s)
+
+--------------------------------------------------------------------------------
 drawSlots :: Board -> [Image]
 drawSlots b = fmap drawing boardPositions
   where
