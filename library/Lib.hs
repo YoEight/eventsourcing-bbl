@@ -15,12 +15,9 @@ module Lib
 --------------------------------------------------------------------------------
 import ClassyPrelude
 import Control.Monad.State.Strict
-import Control.Lens hiding (snoc)
 import Graphics.Vty
 
 --------------------------------------------------------------------------------
-import Constants
-import Draw
 import Game
 import Types
 
@@ -36,17 +33,9 @@ gameLoop = do
     go vty evt = do
       continue <- react evt
       when continue $ do
-        pos <- use cursorPos
-        p   <- use player
-        b   <- use board
-
-        let landscape =
-              placePlayerCursorAt p pos
-                : snoc (drawSlots b)
-                       (translate originX originY boardImage)
-
+        images    <- getImages
         nextEvent <- liftIO $ do
-          update vty (picForLayers landscape)
+          update vty (picForLayers images)
           let innerLoop = do
                 tmp <- nextEvent vty
                 case tmp of

@@ -13,10 +13,12 @@ module Game where
 
 --------------------------------------------------------------------------------
 import ClassyPrelude
-import Control.Lens
+import Control.Lens hiding (snoc)
 import Graphics.Vty
 
 --------------------------------------------------------------------------------
+import Constants
+import Draw
 import Types
 
 --------------------------------------------------------------------------------
@@ -30,6 +32,23 @@ react (KeyPressed key mods) = do
   case p of
     Gaming -> handleGamingPressed key mods
     _      -> return True
+
+--------------------------------------------------------------------------------
+getImages :: Game [Image]
+getImages = do
+  p <- use phase
+  case p of
+    Init -> return []
+    Gaming -> do
+      pos <- use cursorPos
+      ply <- use player
+      b   <- use board
+
+      let playerCur = placePlayerCursorAt ply pos
+          playboard = translate originX originY  boardImage
+          landscape = playerCur : snoc (drawSlots b) playboard
+
+      return landscape
 
 --------------------------------------------------------------------------------
 handleGamingPressed :: Key -> [Modifier] -> Game Bool
