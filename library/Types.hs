@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE StrictData      #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -18,6 +19,7 @@ module Types where
 import           ClassyPrelude
 import           Control.Lens
 import           Control.Monad.State.Strict
+import           Data.Aeson (FromJSON, ToJSON)
 import qualified Data.Vector as Vector
 import           Graphics.Vty
 
@@ -43,7 +45,11 @@ data GameEvent
   | KeyPressed Key [Modifier]
 
 --------------------------------------------------------------------------------
-data Player = Player1 | Player2 deriving Eq
+data Player = Player1 | Player2 deriving (Eq, Generic)
+
+--------------------------------------------------------------------------------
+instance ToJSON Player
+instance FromJSON Player
 
 --------------------------------------------------------------------------------
 instance Show Player where

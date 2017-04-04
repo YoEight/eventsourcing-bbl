@@ -42,6 +42,9 @@ library:
   - mtl
   - vty
   - vector
+  - eventsource-api
+  - eventsource-geteventstore-store
+  - aeson
   source-dirs: library
 license: MIT
 maintainer: Yorick Laupa
