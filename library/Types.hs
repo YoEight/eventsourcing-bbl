@@ -69,6 +69,7 @@ slotPlayer _           = Nothing
 --------------------------------------------------------------------------------
 data Phase
   = Init
+  | Loading
   | Gaming
   | GameComplete
 

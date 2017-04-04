@@ -111,6 +111,15 @@ drawSlots b = fmap drawing boardPositions
     drawing pos@(x,y) = placeSlotAt x y (boardGetSlot b pos)
 
 --------------------------------------------------------------------------------
+drawMenuItem :: Bool -> String -> Image
+drawMenuItem active title = string attr title
+  where
+    attr =
+      if active
+      then defAttr `withBackColor` blue
+      else defAttr
+
+--------------------------------------------------------------------------------
 -- // Drawing
 --------------------------------------------------------------------------------
 block :: Char

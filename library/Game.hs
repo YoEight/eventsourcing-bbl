@@ -24,12 +24,13 @@ import Types
 --------------------------------------------------------------------------------
 react :: GameEvent -> Game Bool
 react Start = do
-  phase .= Gaming
+  phase .= Init
 
   return True
 react (KeyPressed key mods) = do
   p <- use phase
   case p of
+    Init         -> handleMenu key mods
     Gaming       -> handleGamingPressed key mods
     GameComplete -> handleComplete key mods
     _            -> return True
@@ -39,7 +40,15 @@ getImages :: Game [Image]
 getImages = do
   p <- use phase
   case p of
-    Init -> return []
+    Init -> do
+      pos <- use cursorPos
+
+      return [ translate 1 1 $ drawMenuItem (pos == 1) "Start a game."
+             , translate 1 2 $ drawMenuItem (pos == 2) "Load a game."
+             ]
+
+    Loading -> return []
+
     Gaming -> do
       pos <- use cursorPos
       ply <- use player
@@ -96,3 +105,26 @@ handleGamingPressed key mods =
 
       return True
     _ -> return True
+
+--------------------------------------------------------------------------------
+handleMenu :: Key -> [Modifier] -> Game Bool
+handleMenu (KChar 'c') [MCtrl] = return False
+handleMenu key _ = do
+  pos <- use cursorPos
+  case key of
+    KUp ->
+      when (pos - 1 >= 1) $ do
+        cursorPos -= 1
+
+    KDown ->
+      when (pos + 1 <= 2) $ do
+        cursorPos += 1
+
+    KEnter ->
+      if pos == 1
+      then phase .= Gaming
+      else phase .= Loading
+
+    _ -> return ()
+
+  return True
