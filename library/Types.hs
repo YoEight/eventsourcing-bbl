@@ -86,6 +86,7 @@ data GameState =
             , _cursorPos :: Int
             , _player    :: Player
             , _winner    :: Maybe Player
+            , _buffer    :: String
             }
 
 --------------------------------------------------------------------------------
@@ -117,6 +118,7 @@ newGameState =
             , _cursorPos = 1
             , _player    = Player1
             , _winner    = Nothing
+            , _buffer    = []
             }
 
 --------------------------------------------------------------------------------

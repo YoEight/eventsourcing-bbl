@@ -31,9 +31,9 @@ react (KeyPressed key mods) = do
   p <- use phase
   case p of
     Init         -> handleMenu key mods
+    Loading      -> handleLoad key mods
     Gaming       -> handleGamingPressed key mods
     GameComplete -> handleComplete key mods
-    _            -> return True
 
 --------------------------------------------------------------------------------
 getImages :: Game [Image]
@@ -47,7 +47,9 @@ getImages = do
              , translate 1 2 $ drawMenuItem (pos == 2) "Load a game."
              ]
 
-    Loading -> return []
+    Loading -> do
+      bs <- use buffer
+      return [ translate 1 1 $ string defAttr ("Game name: " <> bs <> "|") ]
 
     Gaming -> do
       pos <- use cursorPos
@@ -126,5 +128,17 @@ handleMenu key _ = do
       else phase .= Loading
 
     _ -> return ()
+
+  return True
+
+--------------------------------------------------------------------------------
+handleLoad :: Key -> [Modifier] -> Game Bool
+handleLoad (KChar 'c') [MCtrl] = return False
+handleLoad key _ = do
+  case key of
+    KChar c -> buffer %= \bs -> snoc bs c
+    KBS     -> buffer %= \bs -> fromMaybe bs (initMay bs)
+    KEnter  -> phase .= Gaming
+    _       -> print key
 
   return True
