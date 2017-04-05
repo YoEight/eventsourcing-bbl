@@ -252,7 +252,7 @@ loadGames = do
   let action = foldEventsM store "games" $ \xs (GameCreated name) -> do
         gameCount += 1
 
-        return (StreamName name:xs)
+        return (name:xs)
 
   outcome <- runExceptT (action [])
   case outcome of
@@ -265,10 +265,9 @@ createGame = do
   count <- use gameCount
 
   gameCount += 1
-  let name   = "game-" <> tshow (count + 1)
-      stream = StreamName name
+  let name = StreamName ("game-" <> tshow (count + 1))
 
-  curGame .= stream
+  curGame .= name
 
   store <- getStore
   _     <- appendEvent store "games" AnyVersion (GameCreated name) >>= waitAsync

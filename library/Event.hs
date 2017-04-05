@@ -20,7 +20,7 @@ import EventSource
 import Types
 
 --------------------------------------------------------------------------------
-data GamesEvent = GameCreated Text
+data GamesEvent = GameCreated StreamName
 
 --------------------------------------------------------------------------------
 instance EncodeEvent GamesEvent where
