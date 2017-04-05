@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 --------------------------------------------------------------------------------
 -- |
 -- Module : Game
@@ -38,6 +39,7 @@ react (KeyPressed key mods) = do
     Loading      -> handleLoad key mods
     Gaming       -> handleGamingPressed key mods
     GameComplete -> handleComplete key mods
+    TimeTravel   -> handleTimeTravel key mods
 
 --------------------------------------------------------------------------------
 getImages :: Game [Image]
@@ -72,6 +74,14 @@ getImages = do
       Just w <- use winner
       return [ placeTextAt (1,1) (show w <> " won. Press [ENTER] to quit.") ]
 
+    TimeTravel -> do
+      m   <- use moves
+      pos <- use cursorPos
+      let mkList = fmap $ \i ->
+            translate 1 i $ drawMenuItem (pos == i) (show i)
+
+      return $ mkList [1..m]
+
 --------------------------------------------------------------------------------
 handleComplete :: Key -> [Modifier] -> Game Bool
 handleComplete KEnter _ = return False
@@ -79,26 +89,21 @@ handleComplete _ _      = return True
 
 --------------------------------------------------------------------------------
 handleGamingPressed :: Key -> [Modifier] -> Game Bool
-handleGamingPressed key mods =
+handleGamingPressed (KChar 'c') [MCtrl] = return False
+handleGamingPressed (KChar 't') [MCtrl] = do
+  phase .= TimeTravel
+  return True
+handleGamingPressed key mods = do
   case key of
     KLeft -> do
       pos <- use cursorPos
       when (pos - 1 >= 1) $ do
         cursorPos -= 1
 
-      return True
-
     KRight -> do
       pos <- use cursorPos
       when (pos + 1 <= 7) $ do
         cursorPos += 1
-
-      return True
-
-    KChar 'c' ->
-      case mods of
-        [MCtrl] -> return False
-        _       -> return True
 
     KEnter -> do
       pos     <- use cursorPos
@@ -106,6 +111,7 @@ handleGamingPressed key mods =
 
       when succeed $ do
         saveMove
+        moves  += 1
         player %= nextPlayer
 
         outcome <- checkWin
@@ -113,8 +119,9 @@ handleGamingPressed key mods =
           winner ?= winPlayer
           phase  .= GameComplete
 
-      return True
-    _ -> return True
+    _ -> return ()
+
+  return True
 
 --------------------------------------------------------------------------------
 handleMenu :: Key -> [Modifier] -> Game Bool
@@ -141,6 +148,30 @@ handleMenu key _ = do
         else phase .= Loading
 
     _ -> return ()
+
+  return True
+
+--------------------------------------------------------------------------------
+handleTimeTravel :: Key -> [Modifier] -> Game Bool
+handleTimeTravel key _ = do
+  pos <- use cursorPos
+  case key of
+    KUp ->
+      when (pos - 1 >= 1) $ do
+        cursorPos -= 1
+
+    KDown -> do
+      m <- use moves
+      when (pos + 1 <= m) $ do
+        cursorPos += 1
+
+    KEnter -> do
+      stream <- use curGame
+
+      curGame .= stream
+      phase   .= Gaming
+
+      loadGameAt stream pos
 
   return True
 
@@ -180,8 +211,36 @@ loadGame stream = do
   store <- getStore
   _ <- runExceptT $ forEvents store stream $ \(MovePlayed p pos) -> do
     _ <- insertToken pos
-    player .= nextPlayer p
+    player    .= nextPlayer p
+    cursorPos .= pos
+    moves     += 1
 
+  return ()
+
+--------------------------------------------------------------------------------
+loadGameAt :: StreamName -> Int -> Game ()
+loadGameAt stream time = do
+  m <- use moves
+  createGame
+  newGame <- use curGame
+  moves .= 0
+  board .= emptyBoard
+
+  store <- getStore
+  let limit  = EventNumber (fromIntegral m)
+      action = forSavedEvents store stream $ \case
+        SavedEvent num evt
+          | num <= limit -> do
+            store <- getStore
+            _     <- appendEvent store newGame AnyVersion evt >>= waitAsync
+            for_ (decodeEvent evt) $ \(MovePlayed p pos) -> do
+              _ <- insertToken pos
+              moves     += 1
+              player    .= nextPlayer p
+              cursorPos .= pos
+          | otherwise -> return ()
+
+  _ <- runExceptT action
   return ()
 
 --------------------------------------------------------------------------------
