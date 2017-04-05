@@ -14,7 +14,8 @@ module Lib
 
 --------------------------------------------------------------------------------
 import ClassyPrelude
-import Control.Monad.State.Strict
+import Database.EventStore hiding (nextEvent, shutdown)
+import EventSource.Store.GetEventStore
 import Graphics.Vty
 
 --------------------------------------------------------------------------------
@@ -24,10 +25,10 @@ import Types
 --------------------------------------------------------------------------------
 gameLoop :: IO ()
 gameLoop = do
-  cfg <- standardIOConfig
-  vty <- mkVty cfg
-
-  _ <- execStateT (go vty Start) newGameState
+  cfg   <- standardIOConfig
+  vty   <- mkVty cfg
+  store <- gesStore defaultSettings (Static "localhost" 1113)
+  _     <- runGame store (go vty Start)
   shutdown vty
   where
     go vty evt = do

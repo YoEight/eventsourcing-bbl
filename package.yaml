@@ -45,6 +45,7 @@ library:
   - eventsource-api
   - eventsource-geteventstore-store
   - aeson
+  - eventstore
   source-dirs: library
 license: MIT
 maintainer: Yorick Laupa

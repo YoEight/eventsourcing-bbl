@@ -21,6 +21,7 @@ import           Control.Lens
 import           Control.Monad.State.Strict
 import           Data.Aeson (FromJSON, ToJSON)
 import qualified Data.Vector as Vector
+import           EventSource
 import           Graphics.Vty
 
 --------------------------------------------------------------------------------
@@ -128,7 +129,16 @@ newGameState =
             }
 
 --------------------------------------------------------------------------------
-type Game = StateT GameState IO
+type Game = ReaderT SomeStore (StateT GameState IO)
+
+--------------------------------------------------------------------------------
+getStore :: Game SomeStore
+getStore = ask
+
+--------------------------------------------------------------------------------
+runGame :: Store store => store -> Game () -> IO ()
+runGame store game =
+  evalStateT (runReaderT game (SomeStore store)) newGameState
 
 --------------------------------------------------------------------------------
 columnIndexes :: Int -> [Pos]

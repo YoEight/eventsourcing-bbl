@@ -14,10 +14,14 @@ module Game where
 --------------------------------------------------------------------------------
 import ClassyPrelude
 import Control.Lens hiding (snoc)
+import Control.Monad.Except
+import Control.Monad.State.Strict
+import EventSource
 import Graphics.Vty
 
 --------------------------------------------------------------------------------
 import Constants
+import Event
 import Draw
 import Types
 
@@ -142,3 +146,17 @@ handleLoad key _ = do
     _       -> print key
 
   return True
+
+--------------------------------------------------------------------------------
+loadGame :: StreamName -> Game ()
+loadGame stream = do
+  put newGameState
+
+  phase .= Gaming
+
+  store <- getStore
+  _ <- runExceptT $ forEvents store stream $ \(MovePlayed p pos) -> do
+    _ <- insertToken pos
+    player .= nextPlayer p
+
+  return ()
