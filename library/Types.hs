@@ -77,6 +77,7 @@ slotPlayer _           = Nothing
 data Phase
   = Init
   | Loading
+  | TimeTravel
   | Gaming
   | GameComplete
 
@@ -96,6 +97,7 @@ data GameState =
             , _gameCount :: Int
             , _curGame   :: StreamName
             , _games     :: [StreamName]
+            , _moves     :: Int
             }
 
 --------------------------------------------------------------------------------
@@ -134,6 +136,7 @@ newGameState =
             , _gameCount = 0 
             , _curGame   = ""
             , _games     = []
+            , _moves     = 0
             }
 
 --------------------------------------------------------------------------------
