@@ -52,9 +52,12 @@ getImages = do
              ]
 
     Loading -> do
-      bs <- use buffer
-      return [ translate 1 1 $ string defAttr ("Game name: " <> bs <> "|") ]
+      streams <- use games
+      pos     <- use cursorPos
+      let mkList = fmap $ \(i, StreamName name) ->
+            translate 1 i $ drawMenuItem (pos == i) (unpack name)
 
+      return $ mkList (zip [1..] streams)
     Gaming -> do
       pos <- use cursorPos
       ply <- use player
@@ -102,6 +105,7 @@ handleGamingPressed key mods =
       succeed <- insertToken pos
 
       when succeed $ do
+        saveMove
         player %= nextPlayer
 
         outcome <- checkWin
@@ -126,10 +130,15 @@ handleMenu key _ = do
       when (pos + 1 <= 2) $ do
         cursorPos += 1
 
-    KEnter ->
+    KEnter -> do
+      cursorPos .= 1
+      loadGames
+
       if pos == 1
-      then phase .= Gaming
-      else phase .= Loading
+        then do
+          createGame
+          phase .= Gaming
+        else phase .= Loading
 
     _ -> return ()
 
@@ -139,24 +148,80 @@ handleMenu key _ = do
 handleLoad :: Key -> [Modifier] -> Game Bool
 handleLoad (KChar 'c') [MCtrl] = return False
 handleLoad key _ = do
+  pos <- use cursorPos
   case key of
-    KChar c -> buffer %= \bs -> snoc bs c
-    KBS     -> buffer %= \bs -> fromMaybe bs (initMay bs)
-    KEnter  -> phase .= Gaming
-    _       -> print key
+    KUp -> do
+      when (pos - 1 >= 1) $ do
+        cursorPos -= 1
+
+    KDown -> do
+      streams <- use games
+      when (pos + 1 <= length streams) $ do
+        cursorPos += 1
+
+    KEnter -> do
+      streams <- use games
+      let stream = indexEx streams (pos-1)
+
+      curGame .= stream
+      phase   .= Gaming
+
+      loadGame stream
+
+    _ -> return ()
 
   return True
 
 --------------------------------------------------------------------------------
 loadGame :: StreamName -> Game ()
 loadGame stream = do
-  put newGameState
-
-  phase .= Gaming
+  board .= emptyBoard
 
   store <- getStore
   _ <- runExceptT $ forEvents store stream $ \(MovePlayed p pos) -> do
     _ <- insertToken pos
     player .= nextPlayer p
 
+  return ()
+
+--------------------------------------------------------------------------------
+loadGames :: Game ()
+loadGames = do
+  gameCount .= 0
+
+  store <- getStore
+  let action = foldEventsM store "games" $ \xs (GameCreated name) -> do
+        gameCount += 1
+
+        return (StreamName name:xs)
+
+  outcome <- runExceptT (action [])
+  case outcome of
+    Left err      -> putStrLn $ tshow err
+    Right streams -> games .= streams
+
+--------------------------------------------------------------------------------
+createGame :: Game ()
+createGame = do
+  count <- use gameCount
+
+  gameCount += 1
+  let name   = "game-" <> tshow (count + 1)
+      stream = StreamName name
+
+  curGame .= stream
+
+  store <- getStore
+  _     <- appendEvent store "games" AnyVersion (GameCreated name) >>= waitAsync
+  return ()
+
+--------------------------------------------------------------------------------
+saveMove :: Game ()
+saveMove = do
+  p      <- use player
+  pos    <- use cursorPos
+  stream <- use curGame
+  store  <- getStore
+
+  _ <- appendEvent store stream AnyVersion (MovePlayed p pos) >>= waitAsync
   return ()

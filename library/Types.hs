@@ -93,7 +93,9 @@ data GameState =
             , _cursorPos :: Int
             , _player    :: Player
             , _winner    :: Maybe Player
-            , _buffer    :: String
+            , _gameCount :: Int
+            , _curGame   :: StreamName
+            , _games     :: [StreamName]
             }
 
 --------------------------------------------------------------------------------
@@ -118,14 +120,20 @@ toCartesian total = go 1 total
       else (remain, y)
 
 --------------------------------------------------------------------------------
+emptyBoard :: Vector.Vector Slot
+emptyBoard = Vector.replicate slotNums SlotEmpty
+
+--------------------------------------------------------------------------------
 newGameState :: GameState
 newGameState =
-  GameState { _board     = Vector.replicate slotNums SlotEmpty
+  GameState { _board     = emptyBoard
             , _phase     = Init
             , _cursorPos = 1
             , _player    = Player1
             , _winner    = Nothing
-            , _buffer    = []
+            , _gameCount = 0 
+            , _curGame   = ""
+            , _games     = []
             }
 
 --------------------------------------------------------------------------------
