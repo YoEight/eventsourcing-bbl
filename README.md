@@ -1,48 +1,52 @@
 # [eventsourcing-venteprivee-bbl][]
 
-Thanks for starting a project with Haskeleton! If you haven't heard of it
-before, I suggest reading the introductory blog post. You can find it here:
-<http://taylor.fausak.me/2014/03/04/haskeleton-a-haskell-project-skeleton/>.
+This project was used as a demo to display eventsourcing design features, at
+Vente Privée (Friday 7th, April 2017).
 
-Before you get started, there are a few things that this template couldn't
-provide for you. You should:
+This project implements a [Connect 4][] game:
 
--   Add a synopsis to `package.yaml`. It should be a short (one sentence)
-    explanation of your project.
+## Prerequisites
 
--   Add a description to `package.yaml`. This can be whatever you want it to
-    be.
+This code has been only tested on Unix-like OSes:
 
--   Add a category to `package.yaml`. A list of categories is available on
-    Hackage at <http://hackage.haskell.org/packages>.
+* Any linux distribution.
+* OSX
 
--   Rename `library/Example.hs` to whatever you want your top-level module to
-    be called. Typically this is the same as your package name but in
-    `CamelCase` instead of `kebab-case`.
+You need to install a Haskell build tool named [stack][]
 
-    -   Don't forget to rename the reference to it in
-        `executable/Main.hs`!
+After installing [stack][], you will have to set it up for the first time. In
+project home directory enter:
 
--   If you are on an older version of Stack (<1.0.4), delete `package.yaml` and
-    remove `/*.cabal` from your `.gitignore`.
-
-Once you've done that, start working on your project with the Stack commands
-you know and love.
-
-``` sh
-# Build the project.
-stack build
-
-# Run the test suite.
-stack test
-
-# Run the benchmarks.
-stack bench
-
-# Generate documentation.
-stack haddock
+```sh
+$ stack setup
 ```
 
-Thanks again, and happy hacking!
+You will need to have  a running [GetEventStore][] server instance. Once unzip,
+in the geteventstore directory, enter:
+
+```s
+$ ./run-node.sh --mem-db
+```
+
+## Building
+
+```sh
+$ stack build
+```
+
+## Running
+
+```sh
+$ stack exec bbl-game
+```
 
 [eventsourcing-venteprivee-bbl]: https://github.com/githubuser/eventsourcing-venteprivee-bbl
+
+[Connect 4]:
+https://en.wikipedia.org/wiki/Connect_Four
+
+[stack]:
+https://docs.haskellstack.org/en/stable/README/
+
+[GetEventStore]:
+https://geteventstore.com/downloads/
