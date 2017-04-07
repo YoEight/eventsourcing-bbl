@@ -5,6 +5,10 @@ Vente Privée (Friday 7th, April 2017).
 
 This project implements a [Connect 4][] game:
 
+* Playing a game.
+* Loading a game.
+* Time travelling within the game (be able to replay at any given point).
+
 ## Prerequisites
 
 This code has been only tested on Unix-like OSes:
