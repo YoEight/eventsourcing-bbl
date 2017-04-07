@@ -9,6 +9,8 @@
 -- Stability : provisional
 -- Portability : non-portable
 --
+-- This module gathers all the interaction the game has with its players, at
+-- any stage of the game.
 --------------------------------------------------------------------------------
 module Game where
 
@@ -26,6 +28,7 @@ import Draw
 import Types
 
 --------------------------------------------------------------------------------
+-- | Reacts to a 'GameEvent' regarding the current phase of the game.
 react :: GameEvent -> Game Bool
 react Start = do
   phase .= Init
@@ -41,6 +44,7 @@ react (KeyPressed key mods) = do
     TimeTravel   -> handleTimeTravel key mods
 
 --------------------------------------------------------------------------------
+-- | Generates a game scene regarding the current phase of the game.
 getImages :: Game [Image]
 getImages = do
   p <- use phase

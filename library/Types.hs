@@ -12,6 +12,7 @@
 -- Stability : provisional
 -- Portability : non-portable
 --
+-- This module declares all the types used in the game.
 --------------------------------------------------------------------------------
 module Types where
 
@@ -38,12 +39,13 @@ data Slot
   deriving Eq
 
 --------------------------------------------------------------------------------
-data Token = Circle | Cross deriving Show
-
---------------------------------------------------------------------------------
 data GameEvent
   = Start
+    -- ^ Start is used for the first loop of the game. It allows to properly
+    --   setting up a game.
   | KeyPressed Key [Modifier]
+    -- ^ When the players use their keyboard.
+
 
 --------------------------------------------------------------------------------
 data Player = Player1 | Player2 deriving (Eq, Generic)
@@ -77,17 +79,24 @@ slotPlayer _           = Nothing
 data Phase
   = Init
   | Loading
+    -- ^ The players ask to load a game from the database.
   | TimeTravel
+    -- ^ The players ask to get back at a given point of the game.
   | Gaming
+    -- ^ The players are currently gaming.
   | GameComplete
+    -- ^ One of the players has won.
 
 --------------------------------------------------------------------------------
+-- A position, (abscissa, ordinate) not 0-based.
 type Pos = (Int, Int)
 
 --------------------------------------------------------------------------------
+-- A game board.
 type Board = Vector.Vector Slot
 
 --------------------------------------------------------------------------------
+-- The entire game state.
 data GameState =
   GameState { _board     :: Board
             , _phase     :: Phase
@@ -101,17 +110,22 @@ data GameState =
             }
 
 --------------------------------------------------------------------------------
+-- | This generates all the lenses of `GameState`. The lenses can be accessed
+--   using any 'GameState' record field stripped from their '_'.
 makeLenses ''GameState
 
 --------------------------------------------------------------------------------
+-- | Returns the 'Slot' at given position.
 boardGetSlot :: Board -> Pos -> Slot
 boardGetSlot b pos = b Vector.! (fromCartesian pos - 1)
 
 --------------------------------------------------------------------------------
+-- | Converts a position to a flat 'Vector' index.
 fromCartesian :: Pos -> Int
 fromCartesian (x, y) = x + horizontalSlotNum * (y - 1)
 
 --------------------------------------------------------------------------------
+-- | Converts a flat 'Vector' index to cartesian position.
 toCartesian :: Int -> (Int, Int)
 toCartesian total = go 1 total
   where
@@ -126,6 +140,7 @@ emptyBoard :: Vector.Vector Slot
 emptyBoard = Vector.replicate slotNums SlotEmpty
 
 --------------------------------------------------------------------------------
+-- | Returns a 'GameState' initialized with default values.
 newGameState :: GameState
 newGameState =
   GameState { _board     = emptyBoard
@@ -143,19 +158,23 @@ newGameState =
 type Game = ReaderT SomeStore (StateT GameState IO)
 
 --------------------------------------------------------------------------------
+-- | Returns the database server connection.
 getStore :: Game SomeStore
 getStore = ask
 
 --------------------------------------------------------------------------------
+-- | Runs a 'Game' computation.
 runGame :: Store store => store -> Game () -> IO ()
 runGame store game =
   evalStateT (runReaderT game (SomeStore store)) newGameState
 
 --------------------------------------------------------------------------------
+-- | Returns all the positions for a given column.
 columnIndexes :: Int -> [Pos]
 columnIndexes x = [ (x,y) | y <- [1..verticalSlotNum]]
 
 --------------------------------------------------------------------------------
+-- | Returns all possible positions of the gaming board.
 boardPositions :: [Pos]
 boardPositions =
   [ (x,y) | x <- [1..horizontalSlotNum]
@@ -163,6 +182,8 @@ boardPositions =
           ]
 
 --------------------------------------------------------------------------------
+-- | Try to insert a 'Slot' at the given column. If it fails, it returns 'False',
+--   Which means this movement isn't allowed.
 insertToken :: ColumnIndex -> Game Bool
 insertToken idx = do
   v <- use board
@@ -180,6 +201,7 @@ insertToken idx = do
   loop (columnIndexes idx)
 
 --------------------------------------------------------------------------------
+-- | Detects if the current game board has a winner.
 checkWin :: Game (Maybe Player)
 checkWin = go boardPositions
   where

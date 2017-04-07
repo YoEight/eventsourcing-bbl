@@ -15,26 +15,32 @@ module Constants where
 import ClassyPrelude
 
 --------------------------------------------------------------------------------
+-- | Horizontal slot number.
 horizontalSlotNum :: Int
 horizontalSlotNum = 7
 
 --------------------------------------------------------------------------------
+-- | Vertical slot number.
 verticalSlotNum :: Int
 verticalSlotNum = 6
 
 --------------------------------------------------------------------------------
+-- | The width of a slot.
 slotWidth :: Int
 slotWidth = 10
 
 --------------------------------------------------------------------------------
+-- | The height of a slot.
 slotHeight :: Int
 slotHeight = 10 
 
 --------------------------------------------------------------------------------
+-- | The width of the game board.
 boardWidth :: Int
 boardWidth = horizontalSlotNum * slotWidth
 
 --------------------------------------------------------------------------------
+-- | The height of the game board.
 boardHeight :: Int
 boardHeight = verticalSlotNum * slotHeight
 
@@ -51,5 +57,6 @@ originY :: Int
 originY = 2
 
 --------------------------------------------------------------------------------
+-- | The total slot number of the game board.
 slotNums :: Int
 slotNums = horizontalSlotNum * verticalSlotNum

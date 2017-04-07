@@ -13,7 +13,7 @@ This project implements a [Connect 4][] game:
 
 This code has been only tested on Unix-like OSes:
 
-* Any linux distribution.
+* Any linux distribution (on Ubuntu, you may need to install libtinfo lib).
 * OSX
 
 You need to install a Haskell build tool named [stack][]

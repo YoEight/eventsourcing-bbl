@@ -8,6 +8,9 @@
 -- Stability : provisional
 -- Portability : non-portable
 --
+-- This module implement all the drawing related to the game. This is not where
+-- a scene is contructed. It defines all the functions needed to construct
+-- a scene. Game scenes are built in 'Game' module.
 --------------------------------------------------------------------------------
 module Draw where
 
@@ -23,6 +26,11 @@ import Constants
 import Types
 
 --------------------------------------------------------------------------------
+-- | Uses a generator to build a 'String'. The 'Int' passed to the callback is
+--   incremented as long as the generation goes. It will stop the first time
+--   the callback returns 'Nothing'.
+--
+--   This a specific implementation of an anamorphism.
 generate :: (Int -> Maybe Char) -> String
 generate k = go 1
   where
@@ -32,6 +40,7 @@ generate k = go 1
         Nothing -> []
 
 --------------------------------------------------------------------------------
+-- | Draws a 'Slot' at the given position.
 placeSlotAt :: Int -> Int -> Slot -> Image
 placeSlotAt slotX slotY s = do
   translate posX posY (slot s)
@@ -41,6 +50,7 @@ placeSlotAt slotX slotY s = do
     normY = verticalSlotNum - slotY
 
 --------------------------------------------------------------------------------
+-- | Draws the gaming board.
 boardImage :: Image
 boardImage = foldMap go [1..(boardHeight + 1)]
   where
@@ -49,10 +59,6 @@ boardImage = foldMap go [1..(boardHeight + 1)]
       | (line - 1) `mod` slotHeight == 0 = plainLine
       | line > boardHeight               = mempty
       | otherwise                        = boardLine
-
---------------------------------------------------------------------------------
-boardVerticalBorder :: Image
-boardVerticalBorder = string defAttr (replicate (boardWidth + 1) '=')
 
 --------------------------------------------------------------------------------
 plainLine :: Image
@@ -70,6 +76,7 @@ boardLine = string defAttr line
           | otherwise                      -> Just ' '
 
 --------------------------------------------------------------------------------
+-- | Draws a 'Slot'.
 slot :: Slot -> Image
 slot SlotEmpty = mempty
 slot s = foldMap (\_ -> blockLine) [1..(slotHeight - 1)]
@@ -83,6 +90,7 @@ slot s = foldMap (\_ -> blockLine) [1..(slotHeight - 1)]
         _           -> error "impossible in slot."
 
 --------------------------------------------------------------------------------
+-- | Draws a 'Player' cursor at the given position.
 placePlayerCursorAt :: Player -> Int -> Image
 placePlayerCursorAt p pos =
   translateX posX (playerCursor p)
@@ -90,6 +98,7 @@ placePlayerCursorAt p pos =
     posX  = originX + (pos - 1) * slotWidth + 1
 
 --------------------------------------------------------------------------------
+-- | Draws a 'Player' cursor.
 playerCursor :: Player -> Image
 playerCursor p = string attr (replicate (slotWidth -1) '=')
   where
@@ -100,17 +109,20 @@ playerCursor p = string attr (replicate (slotWidth -1) '=')
         Player2 -> yellow
 
 --------------------------------------------------------------------------------
+-- | Displays a message at the given position.
 placeTextAt :: Pos -> String -> Image
 placeTextAt (x,y) s =
   translate (originX + x) (originY + y) (string defAttr s)
 
 --------------------------------------------------------------------------------
+-- | Draws the 'Slot' 's that compase the gaming 'Board'.
 drawSlots :: Board -> [Image]
 drawSlots b = fmap drawing boardPositions
   where
     drawing pos@(x,y) = placeSlotAt x y (boardGetSlot b pos)
 
 --------------------------------------------------------------------------------
+-- | Draws a menu item.
 drawMenuItem :: Bool -> String -> Image
 drawMenuItem active title = string attr title
   where
@@ -122,5 +134,6 @@ drawMenuItem active title = string attr title
 --------------------------------------------------------------------------------
 -- // Drawing
 --------------------------------------------------------------------------------
+-- | Block unicode value.
 block :: Char
 block = chr 9608

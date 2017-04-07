@@ -13,6 +13,7 @@ import ClassyPrelude
 import Lib
 
 --------------------------------------------------------------------------------
+-- | Main game entrypoint.
 main :: IO ()
 main = gameLoop
 

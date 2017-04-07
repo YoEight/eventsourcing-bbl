@@ -8,6 +8,7 @@
 -- Stability : provisional
 -- Portability : non-portable
 --
+-- This module defines the events used to represent the state of the game.
 --------------------------------------------------------------------------------
 module Event where
 
@@ -20,6 +21,7 @@ import EventSource
 import Types
 
 --------------------------------------------------------------------------------
+-- | Every time a new game is created.
 data GamesEvent = GameCreated StreamName
 
 --------------------------------------------------------------------------------
@@ -40,6 +42,7 @@ instance DecodeEvent GamesEvent where
       _ -> Left "Unexpected event type"
 
 --------------------------------------------------------------------------------
+-- | Every time a 'Player' made a move.
 data GameMoveEvent = MovePlayed Player Int
 
 --------------------------------------------------------------------------------

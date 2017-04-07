@@ -23,6 +23,8 @@ import Game
 import Types
 
 --------------------------------------------------------------------------------
+-- | Main game loop of the game. It will recurse until the game is completed or
+--   when the player hit Ctrl-C.
 gameLoop :: IO ()
 gameLoop = do
   cfg   <- standardIOConfig
