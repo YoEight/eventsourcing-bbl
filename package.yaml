@@ -2,10 +2,10 @@
 # Cabal file when you run `stack build`. See the hpack website for help with
 # this file: <https://github.com/sol/hpack>.
 benchmarks:
-  eventsourcing-venteprivee-bbl-benchmarks:
+  eventsourcing-bbl-benchmarks:
     dependencies:
     - base
-    - eventsourcing-venteprivee-bbl
+    - eventsourcing-bbl
     - criterion
     ghc-options:
     - -rtsopts
@@ -14,12 +14,12 @@ benchmarks:
     main: Main.hs
     source-dirs: benchmark
 category: Other
-description: eventsourcing-venteprivee-bbl is a new Haskeleton package.
+description: eventsourcing-bbl is a new Haskeleton package.
 executables:
   bbl-game:
     dependencies:
     - base
-    - eventsourcing-venteprivee-bbl
+    - eventsourcing-bbl
     ghc-options:
     - -rtsopts
     - -threaded
@@ -33,7 +33,7 @@ extra-source-files:
 - README.md
 - stack.yaml
 ghc-options: -Wall
-github: YoEight/eventsourcing-venteprivee-bbl
+github: YoEight/eventsourcing-bbl
 library:
   dependencies:
   - base
@@ -49,7 +49,7 @@ library:
   source-dirs: library
 license: MIT
 maintainer: Yorick Laupa
-name: eventsourcing-venteprivee-bbl
+name: eventsourcing-bbl
 synopsis: A new Haskeleton package.
 default-extensions:
   - OverloadedStrings
@@ -60,10 +60,10 @@ default-extensions:
 dependencies:
   - classy-prelude
 tests:
-  eventsourcing-venteprivee-bbl-test-suite:
+  eventsourcing-bbl-test-suite:
     dependencies:
     - base
-    - eventsourcing-venteprivee-bbl
+    - eventsourcing-bbl
     - tasty
     - tasty-hspec
     ghc-options:
