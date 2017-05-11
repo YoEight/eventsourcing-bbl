@@ -1,7 +1,6 @@
-# [eventsourcing-venteprivee-bbl][]
+# [eventsourcing-bbl][]
 
-This project was used as a demo to display eventsourcing design features, at
-Vente Privée (Friday 7th, April 2017).
+This project was used as a demo to display eventsourcing design features (Friday 7th, April 2017).
 
 This project implements a [Connect 4][] game:
 
@@ -44,7 +43,7 @@ $ stack build
 $ stack exec bbl-game
 ```
 
-[eventsourcing-venteprivee-bbl]: https://github.com/githubuser/eventsourcing-venteprivee-bbl
+[eventsourcing-bbl]: https://github.com/YoEight/eventsourcing-bbl
 
 [Connect 4]:
 https://en.wikipedia.org/wiki/Connect_Four
