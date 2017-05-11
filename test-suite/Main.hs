@@ -8,7 +8,7 @@ import Test.Tasty.Hspec
 
 main :: IO ()
 main = do
-    test <- testSpec "eventsourcing-venteprivee-bbl" spec
+    test <- testSpec "eventsourcing-bbl" spec
     Test.Tasty.defaultMain test
 
 spec :: Spec
